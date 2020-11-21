@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+    <style>
+        table {
+          border-collapse: collapse;
+        }
+        
+        table, td, th{
+          border: 1px solid rgb(75, 174, 231);
+          text-align: center;
+          font-size: 1.5rem;
+          margin-right: 1.5rem;
+          margin-left: 1.5rem;
+          
+        }
+    </style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de datos Handtrack.js Batak</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+</head>
+<body>
+    <div class="w3-container">
+        <h1>Base de datos Handtrack.js Batak</h1>
+    </div>
+    <div class="w3-container">
+        <table id="table">
+            <tr>
+                <th>Nombre(s) y apellidos</th>
+                <th>N° documento</th>
+                <th>Puntaje</th>
+                <th>bpm</th>
+                <th>Score Threshold</th>
+            </tr>
+
+        </table>
+        <a class="btn" href="index.html">Jugar de nuevo</a>
+        <button type="submit" class="btn" id="saveDB" onclick="saveDB(event)">Descargar</button>
+    </div>
+    <script>
+        var password;
+        var pass1 = "batakdb2020";
+        
+        password = prompt('Por favor ingresa la contraseña para ingresar a la base de datos.');
+
+        if (password==pass1){
+            alert('¡Contraseña correcta! Click en "Aceptar" para ingresar.');
+            
+            getData();
+
+            async function getData(){
+                
+                const response = await fetch('/api');
+                const data = await response.json();
+                       
+                const table = document.getElementById('table');
+
+                for (item of data){
+                    const row = document.createElement('tr')
+                    const name = document.createElement('td');
+                    const pid = document.createElement('td');
+                    const gameScore = document.createElement('td');
+                    const bpm = document.createElement('td');
+                    const parameter = document.createElement('td');
+                
+                    name.textContent = item.nameAndLastname;
+                    pid.textContent = item.pid;
+                    gameScore.textContent = item.gameScore;
+                    bpm.textContent = item.bpm;
+                    parameter.textContent = item.parameter;
+                
+
+                    row.append(name, pid, gameScore, bpm, parameter);
+                    table.append(row);
+                }
+                
+                saveDB = async (event) => {
+                    event.preventDefault();
+
+                    const response = await fetch('/api');
+                    const items = await response.json();
+
+                    let csv
+
+                    // Loop the array of objects
+                    for(let row = 0; row < items.length; row++){
+                        let keysAmount = Object.keys(items[row]).length
+                        let keysCounter = 0
+
+                        // If this is the first row, generate the headings
+                        if(row === 0){
+
+                            // Loop each property of the object
+                            for(let key in items[row]){
+
+                                // This is to not add a comma at the last cell
+                                 // The '\r\n' adds a new line
+                                csv += key + (keysCounter+1 < keysAmount ? ',' : '\r\n' )
+                                keysCounter++
+                            }
+                        }else{
+                            for(let key in items[row]){
+                                csv += items[row][key] + (keysCounter+1 < keysAmount ? ',' : '\r\n' )
+                                keysCounter++
+                            }
+                        }
+
+                        keysCounter = 0
+                    }
+
+                    // Once we are done looping, download the .csv by creating a link
+                    let link = document.createElement('a')
+                    link.id = 'download-csv'
+                    link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(csv));
+                    link.setAttribute('download', 'BatakDB.csv');
+                    document.body.appendChild(link)
+                    document.querySelector('#download-csv').click()
+                }
+            }
+        }
+        else{
+            alert('¡Contraseña incorrecta!');
+            
+        } 
+    </script>
+</body>
+</html>
